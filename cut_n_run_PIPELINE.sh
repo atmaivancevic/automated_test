@@ -241,12 +241,55 @@ SEACR_STRINGENT_TF=`inDir=$projectDir/5_seacr_output/tf outDir=$projectDir/5_sea
 SEACR_STRINGENT_TF_ID=$(echo "$SEACR_STRINGENT_TF" | sed 's/Submitted batch job //') 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# Make deeptools signal heatmaps using all macs2 bigwig files						
+# Make deeptools signal heatmaps using all macs2 bigwig files           
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
+# igg peaks
+DEEPTOOLS_CONTROL=`bwDir=$projectDir/4_bigwigs bedDir=$projectDir/3_macs2_output/control \
+                   outDir=$projectDir/6_signal_heatmaps sbatch --array 0-$((($controlNum/2)-1)) \
+                   --dependency=afterok:$BDG2BW_CONTROL_ID:$BDG2BW_HISTONE_ID:$BDG2BW_TF_ID deeptools_heatmap_from_narrowPeak.q`
+DEEPTOOLS_CONTROL_ID=$(echo "$DEEPTOOLS_CONTROL" | sed 's/Submitted batch job //') 
+
+# histone peaks
+DEEPTOOLS_HISTONE=`bwDir=$projectDir/4_bigwigs bedDir=$projectDir/3_macs2_output/histone \
+                   outDir=$projectDir/6_signal_heatmaps sbatch --array 0-$((($histoneNum/2)-1)) \
+                   --dependency=afterok:$BDG2BW_CONTROL_ID:$BDG2BW_HISTONE_ID:$BDG2BW_TF_ID deeptools_heatmap_from_narrowPeak.q`
+DEEPTOOLS_HISTONE_ID=$(echo "$DEEPTOOLS_HISTONE" | sed 's/Submitted batch job //') 
+
+# tf peaks
+DEEPTOOLS_TF=`bwDir=$projectDir/4_bigwigs bedDir=$projectDir/3_macs2_output/tf \
+              outDir=$projectDir/6_signal_heatmaps sbatch --array 0-$((($tfNum/2)*3-1)) \
+              --dependency=afterok:$BDG2BW_CONTROL_ID:$BDG2BW_HISTONE_ID:$BDG2BW_TF_ID deeptools_heatmap_from_narrowPeak.q`
+DEEPTOOLS_TF_ID=$(echo "$DEEPTOOLS_TF" | sed 's/Submitted batch job //') 
+
+# gencode tss
+DEEPTOOLS_GENCODE=`bwDir=$projectDir/4_bigwigs bedDir=/Shares/CL_Shared/db/genomes/hg38/annotations \
+                   bedFile=gencode.v28.genes.tss.bed outDir=$projectDir/6_signal_heatmaps \
+                   sbatch --dependency=afterok:$BDG2BW_CONTROL_ID:$BDG2BW_HISTONE_ID:$BDG2BW_TF_ID deeptools_heatmap_from_gencode_bed.q`
+DEEPTOOLS_GENCODE_ID=$(echo "$DEEPTOOLS_GENCODE" | sed 's/Submitted batch job //') 
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# Hubload bams and bigwigs as a group						
+# Hubload bams and bigwigs as a group    
+# IMPORTANT NOTE these jobs should run one after another, NOT at the same time (note dependencies below)       
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+# bigwigs first
+HUBLOAD_BIGWIGS=`inDir=$projectDir/4_bigwigs trackName=$trackName trackdb=$trackdb \
+                 sbatch --dependency=afterok:$BDG2BW_CONTROL_ID:$BDG2BW_HISTONE_ID:$BDG2BW_TF_ID hubload_bigwig.q`
+HUBLOAD_BIGWIGS_ID=$(echo "$HUBLOAD_BIGWIGS" | sed 's/Submitted batch job //')
+
+# then bams
+HUBLOAD_BAMS_CONTROL=`inDir=$projectDir/2_bams/control project=$trackName trackdb=$trackdb \
+                      sbatch --dependency=afterok:$HUBLOAD_BIGWIGS_ID hubload_bam.q`
+HUBLOAD_BAMS_CONTROL_ID=$(echo "$HUBLOAD_BAMS_CONTROL" | sed 's/Submitted batch job //')
+
+HUBLOAD_BAMS_HISTONE=`inDir=$projectDir/2_bams/histone project=$trackName trackdb=$trackdb \
+                      sbatch --dependency=afterok:$HUBLOAD_BAMS_CONTROL_ID hubload_bam.q`
+HUBLOAD_BAMS_HISTONE_ID=$(echo "$HUBLOAD_BAMS_HISTONE" | sed 's/Submitted batch job //')
+
+HUBLOAD_BAMS_TF=`inDir=$projectDir/2_bams/tf project=$trackName trackdb=$trackdb \
+                 sbatch --dependency=afterok:$HUBLOAD_BAMS_HISTONE_ID hubload_bam.q`
+HUBLOAD_BAMS_TF_ID=$(echo "$HUBLOAD_BAMS_TF" | sed 's/Submitted batch job //')               
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Calculate repeat enrichment with giggle (optional)						
@@ -261,19 +304,22 @@ SEACR_STRINGENT_TF_ID=$(echo "$SEACR_STRINGENT_TF" | sed 's/Submitted batch job 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~SLURM Job IDs~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 echo "Set up workspace: $SETUP_SLURM_ID"
-echo "Quality check raw fastq (control, histone, tf): $RAWQC_CONTROL_ID, $RAWQC_HISTONE_ID, $RAWQC_TF_ID"
+echo "Quality check raw fastq (igg, histone, tf): $RAWQC_CONTROL_ID, $RAWQC_HISTONE_ID, $RAWQC_TF_ID"
 echo "Generate raw multiqc report: $RAWQC_MULTI_ID"
-echo "Trim adapters (control, histone, tf): $TRIM_CONTROL_ID, $TRIM_HISTONE_ID, $TRIM_TF_ID"
-echo "Quality check trimmed fastq (control, histone, tf): $TRIMQC_CONTROL_ID, $TRIMQC_HISTONE_ID, $TRIMQC_TF_ID"
+echo "Trim adapters (igg, histone, tf): $TRIM_CONTROL_ID, $TRIM_HISTONE_ID, $TRIM_TF_ID"
+echo "Quality check trimmed fastq (igg, histone, tf): $TRIMQC_CONTROL_ID, $TRIMQC_HISTONE_ID, $TRIMQC_TF_ID"
 echo "Generate trimmed multiqc report: $TRIMQC_MULTI_ID"
-echo "Align reads to generate bams (control, histone, tf): $ALIGN_CONTROL_ID, $ALIGN_HISTONE_ID, $ALIGN_TF_ID"
+echo "Align reads to generate bams (igg, histone, tf): $ALIGN_CONTROL_ID, $ALIGN_HISTONE_ID, $ALIGN_TF_ID"
 echo "Subset TF bams by fragment size: $SUBSET_TF_ID"
-echo "Calculate bam fragment size (control, histone, tf): $FRAGSIZE_CONTROL_ID, $FRAGSIZE_HISTONE_ID, $FRAGSIZE_TF_ID"
-echo "Call peaks using MACS2 (control, histone, tf): $MACS2_CONTROL_ID, $MACS2_HISTONE_ID, $MACS2_TF_ID"
-echo "Calculate frip score (control, histone, tf): $FRIP_CONTROL_ID, $FRIP_HISTONE_ID, $FRIP_TF_ID"
-echo "Convert MACS2 bedgraphs to bigwigs (control, histone, tf): $BDG2BW_CONTROL_ID, $BDG2BW_HISTONE_ID, $BDG2BW_TF_ID"
-echo "Preprocess bams for seacr input (control, histone, tf): $PREPROCESS_CONTROL_ID, $PREPROCESS_HISTONE_ID, $PREPROCESS_TF_ID"
+echo "Calculate bam fragment size (igg, histone, tf): $FRAGSIZE_CONTROL_ID, $FRAGSIZE_HISTONE_ID, $FRAGSIZE_TF_ID"
+echo "Call peaks using MACS2 (igg, histone, tf): $MACS2_CONTROL_ID, $MACS2_HISTONE_ID, $MACS2_TF_ID"
+echo "Calculate frip score (igg, histone, tf): $FRIP_CONTROL_ID, $FRIP_HISTONE_ID, $FRIP_TF_ID"
+echo "Convert MACS2 bedgraphs to bigwigs (igg, histone, tf): $BDG2BW_CONTROL_ID, $BDG2BW_HISTONE_ID, $BDG2BW_TF_ID"
+echo "Preprocess bams for seacr input (igg, histone, tf): $PREPROCESS_CONTROL_ID, $PREPROCESS_HISTONE_ID, $PREPROCESS_TF_ID"
 echo "Call peaks using SEACR relaxed (histone, tf): $SEACR_RELAXED_HISTONE_ID, $SEACR_RELAXED_TF_ID"
 echo "Call peaks using SEACR stringent (histone, tf): $SEACR_STRINGENT_HISTONE_ID, $SEACR_STRINGENT_TF_ID"
+echo "Generate deeptools heatmaps (igg, histone, tf, gencode tss): $DEEPTOOLS_CONTROL_ID, $DEEPTOOLS_HISTONE_ID, $DEEPTOOLS_TF_ID, $DEEPTOOLS_GENCODE_ID"
+echo "Hubload all bigwigs: $HUBLOAD_BIGWIGS_ID"
+echo "Hubload bams (igg, histone, tf): $HUBLOAD_BAMS_CONTROL_ID, $HUBLOAD_BAMS_HISTONE_ID, $HUBLOAD_BAMS_TF_ID"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 

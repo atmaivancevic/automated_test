@@ -4,7 +4,7 @@
 #########################################################################################
 
 # Specify the dir where all data will be stored
-projectDir=/Shares/CL_Shared/data/atma/automated_test/HCT116_Dave_21Oct19 
+projectDir=/Shares/CL_Shared/data/atma/automated_test/HCT116_Dave_21Oct19
 
 # Make separate dirs for control, histone and tf
 mkdir -p ${projectDir}/0_raw_fastq
@@ -38,6 +38,11 @@ mkdir -p ${projectDir}/0_raw_fastq/tf
 controlNum=2
 histoneNum=4
 tfNum=8
+
+# track name for UCSC upload of these samples
+# should include cell type and date of seq run
+trackName=HCT116_11Nov2019
+trackdb=~/hub/hg38/trackDb.txt # location of your trackDB.txt file
 
 # Also add reference genome info
 # Currently everything is set to human (hg38)
