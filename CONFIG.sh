@@ -20,17 +20,17 @@ mkdir -p ${projectDir}/0_raw_fastq/tf
 # Example of raw fastq files:
 
 # 0_raw_fastq/control:
-# IgG_S20_R1.fastq.gz      IgG_S20_R2.fastq.gz
+# IgG_R1.fastq.gz      IgG_R2.fastq.gz
 
 # 0_raw_fastq/histone:
-# K9me3_P_S23_R1.fastq.gz  K9me3_P_S23_R2.fastq.gz  
-# K9me3_S_S22_R1.fastq.gz  K9me3_S_S22_R2.fastq.gz
+# K9me3_P_R1.fastq.gz  K9me3_P_R2.fastq.gz  
+# K9me3_S_R1.fastq.gz  K9me3_S_R2.fastq.gz
 
 # 0_raw_fastq/tf:
-# 4H8_P_S26_R1.fastq.gz    4H8_P_S26_R2.fastq.gz  
-# 4H8_S_S25_R1.fastq.gz    4H8_S_S25_R2.fastq.gz  
-# 8wG_S24_R1.fastq.gz      8wG_S24_R2.fastq.gz  
-# CTCF_S21_R1.fastq.gz     CTCF_S21_R2.fastq.gz
+# 4H8_P_R1.fastq.gz    4H8_P_R2.fastq.gz  
+# 4H8_S_R1.fastq.gz    4H8_S_R2.fastq.gz  
+# 8wG_R1.fastq.gz      8wG_R2.fastq.gz  
+# CTCF_R1.fastq.gz     CTCF_R2.fastq.gz
 #########################################################################################
 
 # List the number of files in each dir

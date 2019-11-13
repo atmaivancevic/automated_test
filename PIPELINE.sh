@@ -57,18 +57,19 @@ RAWQC_MULTI_ID=$(echo "$RAWQC_MULTI" | sed 's/Submitted batch job //')
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Trim adapters from raw fastq files using bbduck 					
+# Note that array numbers here are halved, since bbduk uses both pairs of fastq files  
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 TRIM_CONTROL=`inDir=$projectDir/0_raw_fastq/control outDir=$projectDir/1_trimmed_fastq/control \
-              sbatch --array 0-$(($controlNum-1)) --dependency=afterok:$SETUP_SLURM_ID bbduk_PE.q`
+              sbatch --array 0-$((($controlNum/2)-1)) --dependency=afterok:$SETUP_SLURM_ID bbduk_PE.q`
 TRIM_CONTROL_ID=$(echo "$TRIM_CONTROL" | sed 's/Submitted batch job //')
 
 TRIM_HISTONE=`inDir=$projectDir/0_raw_fastq/histone outDir=$projectDir/1_trimmed_fastq/histone \
-              sbatch --array 0-$(($histoneNum-1)) --dependency=afterok:$SETUP_SLURM_ID bbduk_PE.q`
+              sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$SETUP_SLURM_ID bbduk_PE.q`
 TRIM_HISTONE_ID=$(echo "$TRIM_HISTONE" | sed 's/Submitted batch job //')
 
 TRIM_TF=`inDir=$projectDir/0_raw_fastq/tf outDir=$projectDir/1_trimmed_fastq/tf \
-         sbatch --array 0-$(($tfNum-1)) --dependency=afterok:$SETUP_SLURM_ID bbduk_PE.q`
+         sbatch --array 0-$((($tfNum/2)-1)) --dependency=afterok:$SETUP_SLURM_ID bbduk_PE.q`
 TRIM_TF_ID=$(echo "$TRIM_TF" | sed 's/Submitted batch job //')     
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
