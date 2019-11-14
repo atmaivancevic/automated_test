@@ -9,7 +9,7 @@
 ## General settings
 #SBATCH -p short
 #SBATCH -N 1
-#SBATCH -n 8
+#SBATCH -n 4
 #SBATCH --time=8:00:00
 #SBATCH --mem=32GB
 
@@ -19,7 +19,7 @@
 #SBATCH -e /Users/%u/slurmErr/slurm-%A_%a.err
 
 # Set constant variables
-numThreads=8
+numThreads=4
 nonChrM=$(cat ${genomeChrFile} | awk '{print $1}' | grep -v chrM | tr '\n' ' ')
 
 # Define key variables

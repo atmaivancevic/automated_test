@@ -9,7 +9,7 @@
 ## General settings
 #SBATCH -p short
 #SBATCH -N 1
-#SBATCH -n 2
+#SBATCH -n 1
 #SBATCH --time=5:00:00
 #SBATCH --mem=64G
 
@@ -19,7 +19,7 @@
 #SBATCH -e /Users/%u/slurmErr/slurm-%A_%a.err
 
 # Set constant variables
-numThreads=2
+numThreads=1
 
 # Load module
 module load bbmap
