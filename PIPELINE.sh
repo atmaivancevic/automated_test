@@ -242,7 +242,7 @@ BDG2BW_TF_ID=$(echo "$BDG2BW_TF" | sed 's/Submitted batch job //')
 # SEACR_STRINGENT_TF_ID=$(echo "$SEACR_STRINGENT_TF" | sed 's/Submitted batch job //') 
 
 # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# # Make deeptools signal heatmaps using all macs2 bigwig files           
+# # Make deeptools signal heatmaps using all macs2 bigwig files and gencode tss          
 # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # # igg peaks
@@ -269,10 +269,10 @@ BDG2BW_TF_ID=$(echo "$BDG2BW_TF" | sed 's/Submitted batch job //')
 #                    sbatch --dependency=afterok:$BDG2BW_CONTROL_ID:$BDG2BW_HISTONE_ID:$BDG2BW_TF_ID deeptools_heatmap_from_gencode_bed.q`
 # DEEPTOOLS_GENCODE_ID=$(echo "$DEEPTOOLS_GENCODE" | sed 's/Submitted batch job //') 
 
-# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# # Hubload bams and bigwigs as a group    
-# # IMPORTANT NOTE these jobs should run one after another, NOT at the same time (note dependencies below)       
-# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Hubload bams and bigwigs as a group    
+# IMPORTANT NOTE these jobs should run one after another, NOT at the same time (note dependencies below)       
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # # bigwigs first
 # HUBLOAD_BIGWIGS=`inDir=$projectDir/4_bigwigs trackName=$trackName trackdb=$trackdb \

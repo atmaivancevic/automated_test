@@ -28,7 +28,7 @@ bwaIndex=hg38.main.fa
 genomeChrFile=/Shares/CL_Shared/db/genomes/hg38/fa/hg38.main.chrom.sizes
 
 # Define query files
-queries=($(ls ${inDir}/*fastq.gz | xargs -n 1 basename | sed 's/_R1_paired.fastq.gz//g' | sed 's/_R2_paired.fastq.gz//g' | uniq))
+queries=($(ls ${inDir}/*fastq.gz | xargs -n 1 basename | sed 's/_R1_trimmed.fastq.gz//g' | sed 's/_R2_trimmed.fastq.gz//g' | uniq))
 
 # Load modules
 module load bwa
@@ -51,8 +51,8 @@ echo $(date +"[%b %d %H:%M:%S] Starting bwa alignment...")
 bwa mem \
 -t ${numThreads} \
 ${bwaIndexDir}/${bwaIndex} \
-${inDir}/${queries[$SLURM_ARRAY_TASK_ID]}_R1_paired.fastq.gz \
-${inDir}/${queries[$SLURM_ARRAY_TASK_ID]}_R2_paired.fastq.gz \
+${inDir}/${queries[$SLURM_ARRAY_TASK_ID]}_R1_trimmed.fastq.gz \
+${inDir}/${queries[$SLURM_ARRAY_TASK_ID]}_R2_trimmed.fastq.gz \
 | samtools view -Sb -q 10 -F 4 - \
 | samtools view -b - ${nonChrM} \
 | samtools sort -@ ${numThreads} - \

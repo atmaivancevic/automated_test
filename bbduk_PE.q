@@ -40,8 +40,8 @@ echo $(date +"[%b %d %H:%M:%S] Running bbduk...")
 
 bbduk.sh -Xmx4g in1=${inDir}/${queries[$SLURM_ARRAY_TASK_ID]}_R1.fastq.gz \
 in2=${inDir}/${queries[$SLURM_ARRAY_TASK_ID]}_R2.fastq.gz \
-out1=${outDir}/${queries[$SLURM_ARRAY_TASK_ID]}_R1_paired.fastq.gz \
-out2=${outDir}/${queries[$SLURM_ARRAY_TASK_ID]}_R2_paired.fastq.gz \
+out1=${outDir}/${queries[$SLURM_ARRAY_TASK_ID]}_R1_trimmed.fastq.gz \
+out2=${outDir}/${queries[$SLURM_ARRAY_TASK_ID]}_R2_trimmed.fastq.gz \
 ref=${adapterFile} \
 ktrim=r k=31 mink=11 hdist=1 tpe tbo \
 qtrim=r trimq=10 \
