@@ -5,7 +5,7 @@
 ##
 ## Example usage:
 ## inDir=/Shares/CL_Shared/data/atma/pipeline_testing/hct116_CUTnRUN_21Oct19/2_bams/control \
-## project=hct116_CUTnRUN_21Oct19 \
+## trackName=hct116_CUTnRUN_21Oct19 \
 ## trackdb=~/hub/hg38/trackDb.txt \
 ## sbatch hubload_bam.q
 
@@ -24,7 +24,7 @@
 # commands go here
 pwd; hostname; date
 
-echo "Project: "$project
+echo "TrackName: "$trackName
 echo "TrackDb: "$trackdb
 
 echo $(date +"[%b %d %H:%M:%S] Adding bam tracks to hub...")
@@ -32,7 +32,7 @@ echo $(date +"[%b %d %H:%M:%S] Adding bam tracks to hub...")
 for i in $inDir/*.bam 
 do
 	echo "Processing file: "$i
-	hubload.py --input $i --supertrack $project --trackDb $trackdb --autoScale on
+	hubload.py --input $i --supertrack $trackName --trackDb $trackdb --autoScale on
 	echo $(date +"[%b %d %H:%M:%S] Done")
 done
 

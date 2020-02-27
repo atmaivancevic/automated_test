@@ -46,3 +46,8 @@ trackdb=~/hub/hg38/trackDb.txt # location of your trackDB.txt file
 
 # Also add reference genome info
 # Currently everything is set to human (hg38)
+
+# To run the pipeline:
+# Change the above variables as needed
+# Then at the terminal, in the github repo containing these scripts, run: ./PIPELINE.sh
+# After all the jobs have finished (can check by looking at the slurm queue), run "hubsync" to sync all updates to the remote UCSC hub
