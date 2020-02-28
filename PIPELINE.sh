@@ -293,8 +293,10 @@ HUBLOAD_BAMS_TF=`inDir=$projectDir/2_bams/tf trackName=$trackName trackdb=$track
 HUBLOAD_BAMS_TF_ID=$(echo "$HUBLOAD_BAMS_TF" | sed 's/Submitted batch job //')               
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# Calculate repeat enrichment with giggle (optional)						
+# Calculate repeat enrichment with giggle 				
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Find motifs with meme/fimo (optional)						
