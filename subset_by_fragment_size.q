@@ -38,40 +38,28 @@ echo $(date +"[%b %d %H:%M:%S] Starting deeptools alignmentSieve...")
 singularity exec --bind /Shares/CL_Shared ${deeptools} \
 alignmentSieve \
 --bam ${inDir}/${queries[$SLURM_ARRAY_TASK_ID]} \
---maxFragmentLength 120 \
---outFile ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan120.sorted.bam.tmp \
---filterMetrics ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan120_metrics.txt \
---filteredOutReads ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.moreThan120.sorted.bam.tmp \
+--maxFragmentLength 150 \
+--outFile ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan150.sorted.bam.tmp \
+--filterMetrics ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan150_metrics.txt \
+--filteredOutReads ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.moreThan150.sorted.bam.tmp \
 --numberOfProcessors ${numThreads}
 
 # Sort and index the output bams
-echo $(date +"[%b %d %H:%M:%S] Sorting bams (less than 120)...")
+echo $(date +"[%b %d %H:%M:%S] Sorting bams (less than 150)...")
 
 samtools sort \
 -@ ${numThreads} \
-${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan120.sorted.bam.tmp \
--o ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan120.sorted.bam
-
-echo $(date +"[%b %d %H:%M:%S] Sorting bams (more than 120)...")
-
-samtools sort \
--@ ${numThreads} \
-${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.moreThan120.sorted.bam.tmp \
--o ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.moreThan120.sorted.bam
+${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan150.sorted.bam.tmp \
+-o ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan150.sorted.bam
 
 echo $(date +"[%b %d %H:%M:%S] Removing temporary files...")
 
-rm ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan120.sorted.bam.tmp
-rm ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.moreThan120.sorted.bam.tmp
+rm ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan150.sorted.bam.tmp
+rm ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.moreThan150.sorted.bam.tmp
 
-echo $(date +"[%b %d %H:%M:%S] Indexing bams (less than 120)...")
-
-samtools index \
-${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan120.sorted.bam
-
-echo $(date +"[%b %d %H:%M:%S] Indexing bams (more than 120)...")
+echo $(date +"[%b %d %H:%M:%S] Indexing bams (less than 150)...")
 
 samtools index \
-${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.moreThan120.sorted.bam
+${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}.lessThan150.sorted.bam
 
 echo $(date +"[%b %d %H:%M:%S] Done!")

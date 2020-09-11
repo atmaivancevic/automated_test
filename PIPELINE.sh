@@ -140,26 +140,46 @@ FRAGSIZE_HISTONE=`inDir=$projectDir/2_bams/histone outDir=$projectDir/reports/ba
 FRAGSIZE_HISTONE_ID=$(echo "$FRAGSIZE_HISTONE" | sed 's/Submitted batch job //')
 
 FRAGSIZE_TF=`inDir=$projectDir/2_bams/tf outDir=$projectDir/reports/bam_fragment_size \
-             sbatch --array 0-$((($tfNum/2)*3-1)) --dependency=afterok:$SUBSET_TF_ID get_fragment_size.q`
+             sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$SUBSET_TF_ID get_fragment_size.q`
 FRAGSIZE_TF_ID=$(echo "$FRAGSIZE_TF" | sed 's/Submitted batch job //')
 
 # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# # Call peaks using macs2
-# # So for each bam, run macs2 (without control file input) 
-# # to generate narrowPeaks, summits bed, and SPMR normalized bedgraph						
+# # Call peaks with macs2 (both paired end and single end modes)
+# # In each case, set igg as the control for both histone and tf files
+# # Will generate narrowPeaks, summits bed, and SPMR normalized bedgraph						
 # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-MACS2_CONTROL=`inDir=$projectDir/2_bams/control outDir=$projectDir/3_macs2_output/control genome=hs \
-               sbatch --array 0-$((($controlNum/2)-1)) --dependency=afterok:$ALIGN_CONTROL_ID call_peaks_with_macs2.q`
-MACS2_CONTROL_ID=$(echo "$MACS2_CONTROL" | sed 's/Submitted batch job //')
+MACS2_HISTONE_PE=`inDir=$projectDir/2_bams/histone outDir=$projectDir/3_macs2_output_PE/histone \
+               controlFile=$projectDir/2_bams/control/*.bam genome=hs \
+               sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$ALIGN_HISTONE_ID call_peaks_with_macs2_PEmode.q`
+MACS2_HISTONE_PE_ID=$(echo "$MACS2_HISTONE_PE" | sed 's/Submitted batch job //')
 
-MACS2_HISTONE=`inDir=$projectDir/2_bams/histone outDir=$projectDir/3_macs2_output/histone genome=hs \
-               sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$ALIGN_HISTONE_ID call_peaks_with_macs2.q`
-MACS2_HISTONE_ID=$(echo "$MACS2_HISTONE" | sed 's/Submitted batch job //')
+MACS2_TF_PE=`inDir=$projectDir/2_bams/tf outDir=$projectDir/3_macs2_output_PE/tf \
+          controlFile=$projectDir/2_bams/control/*.bam genome=hs \
+          sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$SUBSET_TF_ID call_peaks_with_macs2_PEmode.q`
+MACS2_TF_PE_ID=$(echo "$MACS2_TF_PE" | sed 's/Submitted batch job //')
 
-MACS2_TF=`inDir=$projectDir/2_bams/tf outDir=$projectDir/3_macs2_output/tf genome=hs \
-          sbatch --array 0-$((($tfNum/2)*3-1)) --dependency=afterok:$SUBSET_TF_ID call_peaks_with_macs2.q`
-MACS2_TF_ID=$(echo "$MACS2_TF" | sed 's/Submitted batch job //')
+MACS2_HISTONE_SE=`inDir=$projectDir/2_bams/histone outDir=$projectDir/4_macs2_output_SE/histone \
+               controlFile=$projectDir/2_bams/control/*.bam genome=hs \
+               sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$ALIGN_HISTONE_ID call_peaks_with_macs2_SEmode.q`
+MACS2_HISTONE_SE_ID=$(echo "$MACS2_HISTONE_SE" | sed 's/Submitted batch job //')
+
+MACS2_TF_SE=`inDir=$projectDir/2_bams/tf outDir=$projectDir/4_macs2_output_SE/tf \
+          controlFile=$projectDir/2_bams/control/*.bam genome=hs \
+          sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$SUBSET_TF_ID call_peaks_with_macs2_SEmode.q`
+MACS2_TF_SE_ID=$(echo "$MACS2_TF_SE" | sed 's/Submitted batch job //')
+
+
+#######################
+# Then add another step where you merge the peak files
+# But retain the unmerged ones from each run too
+# and change the setup_workspace.q script to make more directories e.g. 3_macs2_output_PE and 4_macs2_output_SE and 5_macs2_output_merged
+# for this first run, want to load them all up to ucsc
+# but maybe when we send it to them, only retain the merged peak file
+# then continue with the next steps
+# for frip score etc, maybe calculate frip score for macs2_output_PE, macs2_output_SE, and macs2_output_merged
+# rememeber to change the later dependencies to MACS_TF_SE_ID etc rather than MACS_TF 
+
 
 # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # # Calculate FRIP score (requires bams and macs2 peaks)				
@@ -176,7 +196,7 @@ FRIP_HISTONE=`bamDir=$projectDir/2_bams/histone peakDir=$projectDir/3_macs2_outp
 FRIP_HISTONE_ID=$(echo "$FRIP_HISTONE" | sed 's/Submitted batch job //')
 
 FRIP_TF=`bamDir=$projectDir/2_bams/tf peakDir=$projectDir/3_macs2_output/tf \
-         outDir=$projectDir/reports/frip_scores sbatch --array 0-$((($tfNum/2)*3-1)) \
+         outDir=$projectDir/reports/frip_scores sbatch --array 0-$((($tfNum/2)*2-1)) \
          --dependency=afterok:$MACS2_TF_ID calculate_frip_score.q`
 FRIP_TF_ID=$(echo "$FRIP_TF" | sed 's/Submitted batch job //')
 
@@ -193,7 +213,7 @@ BDG2BW_HISTONE=`inDir=$projectDir/3_macs2_output/histone outDir=$projectDir/4_bi
 BDG2BW_HISTONE_ID=$(echo "$BDG2BW_HISTONE" | sed 's/Submitted batch job //')
 
 BDG2BW_TF=`inDir=$projectDir/3_macs2_output/tf outDir=$projectDir/4_bigwigs \
-           sbatch --array 0-$((($tfNum/2)*3-1)) --dependency=afterok:$MACS2_TF_ID convert_macs2_bdg_to_bigwig.q`
+           sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$MACS2_TF_ID convert_macs2_bdg_to_bigwig.q`
 BDG2BW_TF_ID=$(echo "$BDG2BW_TF" | sed 's/Submitted batch job //')
 
 # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -210,7 +230,7 @@ PREPROCESS_HISTONE=`inDir=$projectDir/2_bams/histone outDir=$projectDir/5_seacr_
 PREPROCESS_HISTONE_ID=$(echo "$PREPROCESS_HISTONE" | sed 's/Submitted batch job //')  
 
 PREPROCESS_TF=`inDir=$projectDir/2_bams/tf outDir=$projectDir/5_seacr_output/tf \
-               sbatch --array 0-$((($tfNum/2)*3-1)) --dependency=afterok:$SUBSET_TF_ID convert_bam_to_fragment_bdg.q`
+               sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$SUBSET_TF_ID convert_bam_to_fragment_bdg.q`
 PREPROCESS_TF_ID=$(echo "$PREPROCESS_TF" | sed 's/Submitted batch job //')  
 
 # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -227,7 +247,7 @@ SEACR_RELAXED_HISTONE_ID=$(echo "$SEACR_RELAXED_HISTONE" | sed 's/Submitted batc
 
 SEACR_RELAXED_TF=`inDir=$projectDir/5_seacr_output/tf outDir=$projectDir/5_seacr_output/tf \
                   controlFile=$projectDir/5_seacr_output/control/*.bedgraph stringency=relaxed \
-                  sbatch --array 0-$((($tfNum/2)*3-1)) --dependency=afterok:$PREPROCESS_CONTROL_ID:$PREPROCESS_TF_ID call_peaks_with_seacr.q`
+                  sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$PREPROCESS_CONTROL_ID:$PREPROCESS_TF_ID call_peaks_with_seacr.q`
 SEACR_RELAXED_TF_ID=$(echo "$SEACR_RELAXED_TF" | sed 's/Submitted batch job //') 
 
 # seacr stringent
@@ -238,7 +258,7 @@ SEACR_STRINGENT_HISTONE_ID=$(echo "$SEACR_STRINGENT_HISTONE" | sed 's/Submitted 
 
 SEACR_STRINGENT_TF=`inDir=$projectDir/5_seacr_output/tf outDir=$projectDir/5_seacr_output/tf \
                     controlFile=$projectDir/5_seacr_output/control/*.bedgraph stringency=stringent \
-                    sbatch --array 0-$((($tfNum/2)*3-1)) --dependency=afterok:$PREPROCESS_CONTROL_ID:$PREPROCESS_TF_ID call_peaks_with_seacr.q`
+                    sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$PREPROCESS_CONTROL_ID:$PREPROCESS_TF_ID call_peaks_with_seacr.q`
 SEACR_STRINGENT_TF_ID=$(echo "$SEACR_STRINGENT_TF" | sed 's/Submitted batch job //') 
 
 # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -259,7 +279,7 @@ DEEPTOOLS_HISTONE_ID=$(echo "$DEEPTOOLS_HISTONE" | sed 's/Submitted batch job //
 
 # tf peaks
 DEEPTOOLS_TF=`bwDir=$projectDir/4_bigwigs bedDir=$projectDir/3_macs2_output/tf \
-              outDir=$projectDir/6_signal_heatmaps sbatch --array 0-$((($tfNum/2)*3-1)) \
+              outDir=$projectDir/6_signal_heatmaps sbatch --array 0-$((($tfNum/2)*2-1)) \
               --dependency=afterok:$BDG2BW_CONTROL_ID:$BDG2BW_HISTONE_ID:$BDG2BW_TF_ID deeptools_heatmap_from_narrowPeak.q`
 DEEPTOOLS_TF_ID=$(echo "$DEEPTOOLS_TF" | sed 's/Submitted batch job //') 
 

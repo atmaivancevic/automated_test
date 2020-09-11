@@ -1,10 +1,14 @@
 #!/bin/bash
 
-## Script for running macs2 on paired-end data (no input IgG)
+## Script for running macs2 on paired-end data (with input igg)
 ## Date: 24 October 2019
 ##
 ## Example usage:
-## inDir=/Shares/CL_Shared/data/atma/pipeline_testing/hct116_CUTnRUN_21Oct19/2_bams/control outDir=/Shares/CL_Shared/data/atma/pipeline_testing/hct116_CUTnRUN_21Oct19/3_macs2_output/control genome=hs sbatch --array=0-0 call_peaks_with_macs2.q
+## inDir=/Shares/CL_Shared/data/atma/pipeline_testing/hct116_CUTnRUN_21Oct19/2_bams/histone \
+## outDir=/Shares/CL_Shared/data/atma/pipeline_testing/hct116_CUTnRUN_21Oct19/3_macs2_output/histone \
+## controlFile=/Shares/CL_Shared/data/atma/pipeline_testing/hct116_CUTnRUN_21Oct19/2_bams/control/*.bam \
+## genome=hs \
+## sbatch --array=0-0 call_peaks_with_macs2_SEmode.q
 
 ## General settings
 #SBATCH -p short
@@ -28,13 +32,17 @@ queries=($(ls ${inDir}/*.bam | xargs -n 1 basename))
 pwd; hostname; date
 
 echo "macs2 version: "$(macs2 --version)
-echo "Processing file: "${queries[$SLURM_ARRAY_TASK_ID]}
-
-echo $(date +"[%b %d %H:%M:%S] Calling peaks with macs2...")
+echo "Target file: "${queries[$SLURM_ARRAY_TASK_ID]}
+echo "Control file: "${controlFile}
+echo $(date +"[%b %d %H:%M:%S] Starting macs2...")
 
 macs2 callpeak \
---format BAMPE \
+--format BAM \
+--shift=-75 \
+--extsize=150 \
 --treatment ${inDir}/${queries[$SLURM_ARRAY_TASK_ID]} \
+--control ${controlFile} \
+--pvalue 0.01 \
 --name ${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam} \
 --outdir ${outDir} \
 -g ${genome} \

@@ -32,10 +32,17 @@ mkdir -p ${projectDir}/2_bams/control
 mkdir -p ${projectDir}/2_bams/histone
 mkdir -p ${projectDir}/2_bams/tf
 
-mkdir -p ${projectDir}/3_macs2_output
-mkdir -p ${projectDir}/3_macs2_output/control
-mkdir -p ${projectDir}/3_macs2_output/histone
-mkdir -p ${projectDir}/3_macs2_output/tf
+mkdir -p ${projectDir}/3_macs2_output_PE
+mkdir -p ${projectDir}/3_macs2_output_PE/histone
+mkdir -p ${projectDir}/3_macs2_output_PE/tf
+
+mkdir -p ${projectDir}/4_macs2_output_SE
+mkdir -p ${projectDir}/4_macs2_output_SE/histone
+mkdir -p ${projectDir}/4_macs2_output_SE/tf
+
+mkdir -p ${projectDir}/5_macs2_output_merged
+mkdir -p ${projectDir}/5_macs2_output_merged/histone
+mkdir -p ${projectDir}/5_macs2_output_merged/tf
 
 mkdir -p ${projectDir}/4_bigwigs
 

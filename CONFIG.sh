@@ -4,7 +4,7 @@
 #########################################################################################
 
 # Specify the dir where all data will be stored
-projectDir=/Shares/CL_Shared/data/atma/CUTNRUN/Yuanyuan_CNR_7_200219_plus
+projectDir=/Shares/CL_Shared/data/atma/1_QUARANTINE/7_SEPT2020/AMC_CutnRun/Jedlicka_t2
 
 # Make separate dirs for control, histone and tf
 mkdir -p ${projectDir}/0_raw_fastq
@@ -36,12 +36,12 @@ mkdir -p ${projectDir}/0_raw_fastq/tf
 # List the number of files in each dir
 # Need to know these numbers beforehand in order to set up job arrays in pipeline
 controlNum=2
-histoneNum=6
-tfNum=8
+histoneNum=8
+tfNum=6
 
 # track name for UCSC upload of these samples
 # should include cell type and date of seq run
-trackName=CNR_7_200219_plus
+trackName=Jedlicka_t2
 trackdb=~/hub/hg38/trackDb.txt # location of your trackDB.txt file
 
 # Also add reference genome info
