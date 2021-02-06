@@ -44,16 +44,16 @@ mkdir -p ${projectDir}/5_macs2_output_merged
 mkdir -p ${projectDir}/5_macs2_output_merged/histone
 mkdir -p ${projectDir}/5_macs2_output_merged/tf
 
-mkdir -p ${projectDir}/4_bigwigs
+mkdir -p ${projectDir}/6_bigwigs
 
-mkdir -p ${projectDir}/5_seacr_output
-mkdir -p ${projectDir}/5_seacr_output/control
-mkdir -p ${projectDir}/5_seacr_output/histone
-mkdir -p ${projectDir}/5_seacr_output/tf
+mkdir -p ${projectDir}/7_seacr_output
+mkdir -p ${projectDir}/7_seacr_output/control
+mkdir -p ${projectDir}/7_seacr_output/histone
+mkdir -p ${projectDir}/7_seacr_output/tf
 
-mkdir -p ${projectDir}/6_signal_heatmaps
+mkdir -p ${projectDir}/8_signal_heatmaps
 
-mkdir -p ${projectDir}/7_giggle_output
+mkdir -p ${projectDir}/9_giggle_output
 
 mkdir -p ${projectDir}/reports
 mkdir -p ${projectDir}/reports/bam_fragment_size
