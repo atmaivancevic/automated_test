@@ -24,6 +24,8 @@
 # commands go here
 pwd; hostname; date
 
+module load python/2.7.14
+
 echo "TrackName: "$trackName
 echo "TrackDb: "$trackdb
 
