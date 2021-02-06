@@ -43,7 +43,7 @@ totalReads=`samtools view -c ${bamDir}/${queries[$SLURM_ARRAY_TASK_ID]}.sorted.b
 echo "Total number of reads: "$(echo $totalReads)
 
 # Set a variable equal to the number of reads in peaks (from macs2 narrowpeak file)
-peakReads=`bedtools sort -i ${peakDir}/${queries[$SLURM_ARRAY_TASK_ID]}_peaks.narrowPeak \
+peakReads=`bedtools sort -i ${peakDir}/${queries[$SLURM_ARRAY_TASK_ID]}_mergedpeaks.bed \
 | bedtools merge -i - \
 | bedtools intersect -u -nonamecheck -a ${bamDir}/${queries[$SLURM_ARRAY_TASK_ID]}.sorted.bam -b - -ubam \
 | samtools view -c`

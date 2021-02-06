@@ -27,10 +27,10 @@ SETUP=`projectDir=$projectDir \
        sbatch setup_workspace.q`
 SETUP_SLURM_ID=$(echo "$SETUP" | sed 's/Submitted batch job //')
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# Generate fastqc reports for raw fastq files 
-# Run separately for control, histone and tf						
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# # Generate fastqc reports for raw fastq files 
+# # Run separately for control, histone and tf						
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # control
 RAWQC_CONTROL=`inDir=$projectDir/0_raw_fastq/control outDir=$projectDir/reports/raw_fastqc \
@@ -39,20 +39,20 @@ RAWQC_CONTROL_ID=$(echo "$RAWQC_CONTROL" | sed 's/Submitted batch job //')
 
 # histone
 RAWQC_HISTONE=`inDir=$projectDir/0_raw_fastq/histone outDir=$projectDir/reports/raw_fastqc \
-               sbatch --array 0-$(($histoneNum-1)) --dependency=afterok:$SETUP_SLURM_ID fastqc.q`
+               sbatch --array 0-$(($histoneNum-1)) --dependency=afterok:$RAWQC_CONTROL_ID fastqc.q`
 RAWQC_HISTONE_ID=$(echo "$RAWQC_HISTONE" | sed 's/Submitted batch job //')
 
 # tf
 RAWQC_TF=`inDir=$projectDir/0_raw_fastq/tf outDir=$projectDir/reports/raw_fastqc \
-          sbatch --array 0-$(($tfNum-1)) --dependency=afterok:$SETUP_SLURM_ID fastqc.q`
+          sbatch --array 0-$(($tfNum-1)) --dependency=afterok:$RAWQC_HISTONE_ID fastqc.q`
 RAWQC_TF_ID=$(echo "$RAWQC_TF" | sed 's/Submitted batch job //')
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# Generate a collated multiqc report for raw fastqc files 					
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# # Generate a collated multiqc report for raw fastqc files 					
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 RAWQC_MULTI=`inDir=$projectDir/reports/raw_fastqc outDir=$projectDir/reports/raw_multiqc \
-             sbatch --dependency=afterok:$RAWQC_CONTROL_ID:$RAWQC_HISTONE_ID:$RAWQC_TF_ID multiqc.q`
+             sbatch --dependency=afterok:$RAWQC_TF_ID multiqc.q`
 RAWQC_MULTI_ID=$(echo "$RAWQC_MULTI" | sed 's/Submitted batch job //')
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -65,11 +65,11 @@ TRIM_CONTROL=`inDir=$projectDir/0_raw_fastq/control outDir=$projectDir/1_trimmed
 TRIM_CONTROL_ID=$(echo "$TRIM_CONTROL" | sed 's/Submitted batch job //')
 
 TRIM_HISTONE=`inDir=$projectDir/0_raw_fastq/histone outDir=$projectDir/1_trimmed_fastq/histone \
-              sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$SETUP_SLURM_ID bbduk_PE.q`
+              sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$TRIM_CONTROL_ID bbduk_PE.q`
 TRIM_HISTONE_ID=$(echo "$TRIM_HISTONE" | sed 's/Submitted batch job //')
 
 TRIM_TF=`inDir=$projectDir/0_raw_fastq/tf outDir=$projectDir/1_trimmed_fastq/tf \
-         sbatch --array 0-$((($tfNum/2)-1)) --dependency=afterok:$SETUP_SLURM_ID bbduk_PE.q`
+         sbatch --array 0-$((($tfNum/2)-1)) --dependency=afterok:$TRIM_HISTONE_ID bbduk_PE.q`
 TRIM_TF_ID=$(echo "$TRIM_TF" | sed 's/Submitted batch job //')     
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -79,31 +79,31 @@ TRIM_TF_ID=$(echo "$TRIM_TF" | sed 's/Submitted batch job //')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 TRIMQC_CONTROL=`inDir=$projectDir/1_trimmed_fastq/control outDir=$projectDir/reports/trimmed_fastqc \
-                sbatch --array 0-$(($controlNum-1)) --dependency=afterok:$TRIM_CONTROL_ID fastqc.q`
+                sbatch --array 0-$(($controlNum-1)) --dependency=afterok:$TRIM_TF_ID fastqc.q`
 TRIMQC_CONTROL_ID=$(echo "$TRIMQC_CONTROL" | sed 's/Submitted batch job //')
 
 TRIMQC_HISTONE=`inDir=$projectDir/1_trimmed_fastq/histone outDir=$projectDir/reports/trimmed_fastqc \
-                sbatch --array 0-$(($histoneNum-1)) --dependency=afterok:$TRIM_HISTONE_ID fastqc.q`
+                sbatch --array 0-$(($histoneNum-1)) --dependency=afterok:$TRIMQC_CONTROL_ID fastqc.q`
 TRIMQC_HISTONE_ID=$(echo "$TRIMQC_HISTONE" | sed 's/Submitted batch job //')
 
 TRIMQC_TF=`inDir=$projectDir/1_trimmed_fastq/tf outDir=$projectDir/reports/trimmed_fastqc \
-           sbatch --array 0-$(($tfNum-1)) --dependency=afterok:$TRIM_TF_ID fastqc.q`
+           sbatch --array 0-$(($tfNum-1)) --dependency=afterok:$TRIMQC_HISTONE_ID fastqc.q`
 TRIMQC_TF_ID=$(echo "$TRIMQC_TF" | sed 's/Submitted batch job //')
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# Generate a collated multiqc report for trimmed fastqc files	
-# Use the same multiqc.q script as above, but change input dir to trimmed_fastqc/ 
-# and output dir to reports/trimmed_multiqc/			
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# # Generate a collated multiqc report for trimmed fastqc files	
+# # Use the same multiqc.q script as above, but change input dir to trimmed_fastqc/ 
+# # and output dir to reports/trimmed_multiqc/			
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 TRIMQC_MULTI=`inDir=$projectDir/reports/trimmed_fastqc outDir=$projectDir/reports/trimmed_multiqc \
-              sbatch --dependency=afterok:$TRIMQC_CONTROL_ID:$TRIMQC_HISTONE_ID:$TRIMQC_TF_ID multiqc.q`
+              sbatch --dependency=afterok:$TRIMQC_TF_ID multiqc.q`
 TRIMQC_MULTI_ID=$(echo "$TRIMQC_MULTI" | sed 's/Submitted batch job //')
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# Make unique-mapping/sorted/indexed bams (filter out chrM) using bwa
-# Note that array numbers are now halved, since only one bam output for each pair of fastq files						
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# # Make unique-mapping/sorted/indexed bams (filter out chrM) using bwa
+# # Note that array numbers are now halved, since only one bam output for each pair of fastq files						
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 ALIGN_CONTROL=`inDir=$projectDir/1_trimmed_fastq/control outDir=$projectDir/2_bams/control \
                sbatch --array 0-$((($controlNum/2)-1)) --dependency=afterok:$TRIM_CONTROL_ID bwa_PE.q`
@@ -117,19 +117,19 @@ ALIGN_TF=`inDir=$projectDir/1_trimmed_fastq/tf outDir=$projectDir/2_bams/tf \
           sbatch --array 0-$((($tfNum/2)-1)) --dependency=afterok:$TRIM_TF_ID bwa_PE.q`
 ALIGN_TF_ID=$(echo "$ALIGN_TF" | sed 's/Submitted batch job //')
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# For TFs, filter bams into total, <120, and >120 sizes
-# This script will also automatically sort and index the new bams made						
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# # For TFs, filter bams into total, <150, and >150 sizes
+# # This script will also automatically sort and index the new bams made						
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 SUBSET_TF=`inDir=$projectDir/2_bams/tf outDir=$projectDir/2_bams/tf \
            sbatch --array 0-$((($tfNum/2)-1)) --dependency=afterok:$ALIGN_TF_ID subset_by_fragment_size.q`
 SUBSET_TF_ID=$(echo "$SUBSET_TF" | sed 's/Submitted batch job //')
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# Calculate bam fragment size, output table and histogram
-# Note that the array number for tf bams has increased now that the subsetted bams are in there too					
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# # Calculate bam fragment size, output table and histogram
+# # Note that the array number for tf bams has increased now that the subsetted bams are in there too					
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 FRAGSIZE_CONTROL=`inDir=$projectDir/2_bams/control outDir=$projectDir/reports/bam_fragment_size \
                   sbatch --array 0-$((($controlNum/2)-1)) --dependency=afterok:$ALIGN_CONTROL_ID get_fragment_size.q`
@@ -170,54 +170,53 @@ MACS2_TF_SE=`inDir=$projectDir/2_bams/tf outDir=$projectDir/4_macs2_output_SE/tf
 MACS2_TF_SE_ID=$(echo "$MACS2_TF_SE" | sed 's/Submitted batch job //')
 
 
-#######################
-# Then add another step where you merge the peak files
-# also make sure to rename macs2 output (PE and SE) 
-# But retain the unmerged ones from each run too
-# and change the setup_workspace.q script to make more directories e.g. 3_macs2_output_PE and 4_macs2_output_SE and 5_macs2_output_merged
-# for this first run, want to load them all up to ucsc
-# but maybe when we send it to them, only retain the merged peak file
-# then continue with the next steps
-# for frip score etc, maybe calculate frip score for macs2_output_PE, macs2_output_SE, and macs2_output_merged
-# rememeber to change the later dependencies to MACS_TF_SE_ID etc rather than MACS_TF 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Merge peaks from the two separate runs
+# Retain the max peak score within each merged regions
+# Output merged peaks in bed format         
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+MERGE_PEAKS_HISTONE=`inDir1=$projectDir/3_macs2_output_PE/histone \
+                  inDir2=$projectDir/4_macs2_output_SE/histone \
+                  outDir=$projectDir/5_macs2_output_merged/histone \
+                  sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$MACS2_HISTONE_SE_ID merge_peak_files.q`
+MERGE_PEAKS_HISTONE_ID=$(echo "$MERGE_PEAKS_HISTONE" | sed 's/Submitted batch job //')
+
+MERGE_PEAKS_TF=`inDir1=$projectDir/3_macs2_output_PE/tf \
+                  inDir2=$projectDir/4_macs2_output_SE/tf \
+                  outDir=$projectDir/5_macs2_output_merged/tf \
+                  sbatch --array 0-$((($tfNum/2)-1)) --dependency=afterok:$MACS2_TF_SE_ID merge_peak_files.q`
+MERGE_PEAKS_TF_ID=$(echo "$MERGE_PEAKS_TF" | sed 's/Submitted batch job //')
 
 
-# # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# # # Calculate FRIP score (requires bams and macs2 peaks)				
-# # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Calculate FRIP score (requires bams and macs2 peaks)        
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# FRIP_CONTROL=`bamDir=$projectDir/2_bams/control peakDir=$projectDir/3_macs2_output/control \
-#               outDir=$projectDir/reports/frip_scores sbatch --array 0-$((($controlNum/2)-1)) \
-#               --dependency=afterok:$MACS2_CONTROL_ID calculate_frip_score.q`
-# FRIP_CONTROL_ID=$(echo "$FRIP_CONTROL" | sed 's/Submitted batch job //')
+FRIP_HISTONE=`bamDir=$projectDir/2_bams/histone peakDir=$projectDir/5_macs2_output_merged/histone \
+              outDir=$projectDir/reports/frip_scores sbatch --array 0-$((($histoneNum/2)-1)) \
+              --dependency=afterok:$MERGE_PEAKS_HISTONE_ID calculate_frip_score.q`
+FRIP_HISTONE_ID=$(echo "$FRIP_HISTONE" | sed 's/Submitted batch job //')
 
-# FRIP_HISTONE=`bamDir=$projectDir/2_bams/histone peakDir=$projectDir/3_macs2_output/histone \
-#               outDir=$projectDir/reports/frip_scores sbatch --array 0-$((($histoneNum/2)-1)) \
-#               --dependency=afterok:$MACS2_HISTONE_ID calculate_frip_score.q`
-# FRIP_HISTONE_ID=$(echo "$FRIP_HISTONE" | sed 's/Submitted batch job //')
+FRIP_TF=`bamDir=$projectDir/2_bams/tf peakDir=$projectDir/5_macs2_output_merged/tf \
+         outDir=$projectDir/reports/frip_scores sbatch --array 0-$((($tfNum/2)*2-1)) \
+         --dependency=afterok:$MERGE_PEAKS_TF_ID calculate_frip_score.q`
+FRIP_TF_ID=$(echo "$FRIP_TF" | sed 's/Submitted batch job //')
 
-# FRIP_TF=`bamDir=$projectDir/2_bams/tf peakDir=$projectDir/3_macs2_output/tf \
-#          outDir=$projectDir/reports/frip_scores sbatch --array 0-$((($tfNum/2)*2-1)) \
-#          --dependency=afterok:$MACS2_TF_ID calculate_frip_score.q`
-# FRIP_TF_ID=$(echo "$FRIP_TF" | sed 's/Submitted batch job //')
 
-# # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# # # Convert macs2 bedgraphs to bigwigs						
-# # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Convert macs2 bedgraphs to bigwigs						
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# BDG2BW_CONTROL=`inDir=$projectDir/3_macs2_output/control outDir=$projectDir/4_bigwigs \
-#                 sbatch --array 0-$((($controlNum/2)-1)) --dependency=afterok:$MACS2_CONTROL_ID convert_macs2_bdg_to_bigwig.q`
-# BDG2BW_CONTROL_ID=$(echo "$BDG2BW_CONTROL" | sed 's/Submitted batch job //')
+BDG2BW_HISTONE=`inDir=$projectDir/3_macs2_output_PE/histone outDir=$projectDir/6_bigwigs \
+                sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$MACS2_HISTONE_PE_ID convert_macs2_bdg_to_bigwig.q`
+BDG2BW_HISTONE_ID=$(echo "$BDG2BW_HISTONE" | sed 's/Submitted batch job //')
 
-# BDG2BW_HISTONE=`inDir=$projectDir/3_macs2_output/histone outDir=$projectDir/4_bigwigs \
-#                 sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$MACS2_HISTONE_ID convert_macs2_bdg_to_bigwig.q`
-# BDG2BW_HISTONE_ID=$(echo "$BDG2BW_HISTONE" | sed 's/Submitted batch job //')
+BDG2BW_TF=`inDir=$projectDir/3_macs2_output_PE/tf outDir=$projectDir/6_bigwigs \
+           sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$MACS2_TF_PE_ID convert_macs2_bdg_to_bigwig.q`
+BDG2BW_TF_ID=$(echo "$BDG2BW_TF" | sed 's/Submitted batch job //')
 
-# BDG2BW_TF=`inDir=$projectDir/3_macs2_output/tf outDir=$projectDir/4_bigwigs \
-#            sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$MACS2_TF_ID convert_macs2_bdg_to_bigwig.q`
-# BDG2BW_TF_ID=$(echo "$BDG2BW_TF" | sed 's/Submitted batch job //')
-
-# # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # # # Pre-process bams to prepare for running seacr
 # # # I.e. Sort bams by read name, fix mate pairs, and convert to fragment bedgraphs			
 # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -336,9 +335,13 @@ echo "Generate trimmed multiqc report: $TRIMQC_MULTI_ID"
 echo "Align reads to generate bams (igg, histone, tf): $ALIGN_CONTROL_ID, $ALIGN_HISTONE_ID, $ALIGN_TF_ID"
 echo "Subset TF bams by fragment size: $SUBSET_TF_ID"
 echo "Calculate bam fragment size (igg, histone, tf): $FRAGSIZE_CONTROL_ID, $FRAGSIZE_HISTONE_ID, $FRAGSIZE_TF_ID"
-echo "Call peaks using MACS2 (igg, histone, tf): $MACS2_CONTROL_ID, $MACS2_HISTONE_ID, $MACS2_TF_ID"
-echo "Calculate frip score (igg, histone, tf): $FRIP_CONTROL_ID, $FRIP_HISTONE_ID, $FRIP_TF_ID"
+echo "Call peaks using MACS2 PE mode (histone, tf): $MACS2_HISTONE_PE_ID, $MACS2_TF_PE_ID"
+echo "Call peaks using MACS2 SE mode (histone, tf): $MACS2_HISTONE_SE_ID, $MACS2_TF_SE_ID"
+echo "Merge peaks (histone, tf): $MERGE_PEAKS_HISTONE_ID, $MERGE_PEAKS_TF_ID"
+echo "Calculate frip score (histone, tf): $FRIP_HISTONE_ID, $FRIP_TF_ID"
 echo "Convert MACS2 bedgraphs to bigwigs (igg, histone, tf): $BDG2BW_CONTROL_ID, $BDG2BW_HISTONE_ID, $BDG2BW_TF_ID"
+
+###
 echo "Preprocess bams for seacr input (igg, histone, tf): $PREPROCESS_CONTROL_ID, $PREPROCESS_HISTONE_ID, $PREPROCESS_TF_ID"
 echo "Call peaks using SEACR relaxed (histone, tf): $SEACR_RELAXED_HISTONE_ID, $SEACR_RELAXED_TF_ID"
 echo "Call peaks using SEACR stringent (histone, tf): $SEACR_STRINGENT_HISTONE_ID, $SEACR_STRINGENT_TF_ID"
