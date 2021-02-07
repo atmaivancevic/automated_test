@@ -46,10 +46,10 @@ mkdir -p ${projectDir}/5_macs2_output_merged/tf
 
 mkdir -p ${projectDir}/6_bigwigs
 
-mkdir -p ${projectDir}/7_seacr_output
-mkdir -p ${projectDir}/7_seacr_output/control
-mkdir -p ${projectDir}/7_seacr_output/histone
-mkdir -p ${projectDir}/7_seacr_output/tf
+#mkdir -p ${projectDir}/7_seacr_output
+#mkdir -p ${projectDir}/7_seacr_output/control
+#mkdir -p ${projectDir}/7_seacr_output/histone
+#mkdir -p ${projectDir}/7_seacr_output/tf
 
 mkdir -p ${projectDir}/8_signal_heatmaps
 
@@ -62,8 +62,6 @@ mkdir -p ${projectDir}/reports/raw_fastqc
 mkdir -p ${projectDir}/reports/raw_multiqc
 mkdir -p ${projectDir}/reports/trimmed_fastqc
 mkdir -p ${projectDir}/reports/trimmed_multiqc
-
-mkdir -p ${projectDir}/summary
 
 echo $(date +"[%b %d %H:%M:%S] Done!")
 

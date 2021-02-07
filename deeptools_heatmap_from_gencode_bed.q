@@ -4,10 +4,8 @@
 ## Date: 22 Jan 2019 
 ##
 ## Example usage:
-## bwDir=$projectDir/4_bigwigs \
-## bedDir=/Shares/CL_Shared/db/genomes/hg38/annotations \
-## bedFile=gencode.v28.genes.tss.bed \
-## outDir=$projectDir/6_signal_heatmaps \
+## bwDir=$projectDir/6_bigwigs bedDir=/scratch/Users/ativ2716/data/gencode_tss \
+## bedFile=gencode.v28.genes.tss.bed outDir=$projectDir/8_signal_heatmaps \
 ## sbatch deeptools_heatmap_from_gencode_bed.q
 
 # General settings
@@ -44,7 +42,7 @@ windowRight=4000
 binSize=10
 numCPU=16
 
-singularity exec --bind /Shares/CL_Shared $deeptools \
+singularity exec --bind /scratch/Users $deeptools \
 computeMatrix reference-point \
 --referencePoint TSS \
 --scoreFileName ${wigs} \
@@ -62,7 +60,7 @@ echo $(date +"[%b %d %H:%M:%S] Plot heatmap...")
 zMin=0
 yMin=0
 
-singularity exec --bind /Shares/CL_Shared $deeptools \
+singularity exec --bind /scratch/Users $deeptools \
 plotHeatmap \
 -m $outDir/"BEDFILE"_${bedFile}.mat.gz \
 --outFileName $outDir/"BEDFILE"_${bedFile}.png \

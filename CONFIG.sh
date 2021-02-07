@@ -4,7 +4,7 @@
 #########################################################################################
 
 # Specify the dir where all data will be stored
-projectDir=/scratch/Users/ativ2716/data/Jedlicka_210114_A00405_0338_BHNYLTDSXY/exp1_firstIgG
+projectDir=/scratch/Users/ativ2716/data/Jedlicka_210114_A00405_0338_BHNYLTDSXY/exp2_secondIgG
 
 # Make separate dirs for control, histone and tf
 mkdir -p ${projectDir}/0_raw_fastq
@@ -41,7 +41,7 @@ tfNum=8
 
 # track name for UCSC upload of these samples
 # should include cell type and date of seq run
-trackName=Jedlicka_210114_A00405_0338_BHNYLTDSXY
+trackName=Jedlicka_exp2
 trackdb=~/hub/hg38/trackDb.txt # location of your trackDB.txt file
 
 # Also add reference genome info

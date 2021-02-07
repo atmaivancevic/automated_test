@@ -9,7 +9,7 @@
 # General settings
 #SBATCH -p short
 #SBATCH -N 1
-#SBATCH -n 8
+#SBATCH -n 1
 #SBATCH --time=0:30:00
 #SBATCH --mem=4GB
 
@@ -28,10 +28,10 @@ multiqc=/scratch/Shares/public/singularity/multiqc-1.7.img
 pwd; hostname; date
 
 echo "Singularity version: "$(singularity --version)
-echo "MultiQC version: "$(singularity exec --bind /Shares/CL_Shared ${multiqc} multiqc --version)
+echo "MultiQC version: "$(singularity exec --bind /scratch/Users ${multiqc} multiqc --version)
 echo $(date +"[%b %d %H:%M:%S] Running multiqc...")
 
-singularity exec --bind /Shares/CL_Shared ${multiqc} \
+singularity exec --bind /scratch/Users ${multiqc} \
 multiqc \
 ${inDir}/*.zip \
 --outdir ${outDir}

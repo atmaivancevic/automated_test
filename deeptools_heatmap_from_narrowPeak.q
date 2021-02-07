@@ -46,7 +46,7 @@ windowRight=4000
 binSize=10
 numCPU=16
 
-singularity exec --bind /Shares/CL_Shared $deeptools \
+singularity exec --bind /scratch/Users $deeptools \
 computeMatrix reference-point \
 --referencePoint TSS \
 --scoreFileName ${wigs} \
@@ -64,7 +64,7 @@ echo $(date +"[%b %d %H:%M:%S] Plot heatmap...")
 zMin=0
 yMin=0
 
-singularity exec --bind /Shares/CL_Shared $deeptools \
+singularity exec --bind /scratch/Users $deeptools \
 plotHeatmap \
 -m $outDir/"BEDFILE"_${queries[$SLURM_ARRAY_TASK_ID]}.mat.gz \
 --outFileName $outDir/"BEDFILE"_${queries[$SLURM_ARRAY_TASK_ID]}.png \

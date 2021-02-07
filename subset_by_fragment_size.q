@@ -35,7 +35,7 @@ numThreads=8
 echo "Processing file: "${queries[$SLURM_ARRAY_TASK_ID]}
 echo $(date +"[%b %d %H:%M:%S] Starting deeptools alignmentSieve...")
 
-singularity exec --bind /Shares/CL_Shared ${deeptools} \
+singularity exec --bind /scratch/Users ${deeptools} \
 alignmentSieve \
 --bam ${inDir}/${queries[$SLURM_ARRAY_TASK_ID]} \
 --maxFragmentLength 150 \

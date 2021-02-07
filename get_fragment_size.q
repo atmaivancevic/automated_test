@@ -33,7 +33,7 @@ numThreads=8
 # Get fragment size 
 echo $(date +"[%b %d %H:%M:%S] Starting deeptools bamPEFragmentSize...")
 
-singularity exec --bind /Shares/CL_Shared ${deeptools} \
+singularity exec --bind /scratch/Users ${deeptools} \
 bamPEFragmentSize \
 --bamfiles ${inDir}/${queries[$SLURM_ARRAY_TASK_ID]} \
 --table ${outDir}/${queries[$SLURM_ARRAY_TASK_ID]%.sorted.bam}_metrics.txt \
