@@ -126,7 +126,7 @@ ALIGN_TF_ID=$(echo "$ALIGN_TF" | sed 's/Submitted batch job //')
 
 # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # # # For TFs, filter bams into total, <150, and >150 sizes
-# # # This script will also automatically sort and index the new bams made						
+# # # This script will also automatically sort and index the new bams made			
 # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 SUBSET_TF=`inDir=$projectDir/2_bams/tf outDir=$projectDir/2_bams/tf \
@@ -155,7 +155,7 @@ FRAGSIZE_TF_ID=$(echo "$FRAGSIZE_TF" | sed 's/Submitted batch job //')
 # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # # # Call peaks with macs2 (both paired end and single end modes)
 # # # In each case, set igg as the control for both histone and tf files
-# # # Will generate narrowPeaks, summits bed, and SPMR normalized bedgraph						
+# # # Will generate narrowPeaks, summits bed, and SPMR normalized bedgraph			
 # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 MACS2_HISTONE_PE=`inDir=$projectDir/2_bams/histone outDir=$projectDir/3_macs2_output_PE/histone \
@@ -199,19 +199,6 @@ MERGE_PEAKS_TF_ID=$(echo "$MERGE_PEAKS_TF" | sed 's/Submitted batch job //')
 
 
 # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# # # Calculate FRIP score (requires bams and macs2 peaks)        
-# # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
-FRIP_HISTONE=`bamDir=$projectDir/2_bams/histone peakDir=$projectDir/5_macs2_output_merged/histone \
-              outDir=$projectDir/reports/frip_scores sbatch --dependency=afterok:$MERGE_PEAKS_HISTONE_ID:$ALIGN_HISTONE_ID --array 0-$((($histoneNum/2)-1)) calculate_frip_score.q`
-FRIP_HISTONE_ID=$(echo "$FRIP_HISTONE" | sed 's/Submitted batch job //')
-
-FRIP_TF=`bamDir=$projectDir/2_bams/tf peakDir=$projectDir/5_macs2_output_merged/tf \
-         outDir=$projectDir/reports/frip_scores sbatch --dependency=afterok:$MERGE_PEAKS_TF_ID:$ALIGN_TF_ID --array 0-$((($tfNum/2)*2-1)) calculate_frip_score.q`
-FRIP_TF_ID=$(echo "$FRIP_TF" | sed 's/Submitted batch job //')
-
-
-# # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # # # Convert macs2 bedgraphs to bigwigs						
 # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -226,7 +213,7 @@ BDG2BW_TF_ID=$(echo "$BDG2BW_TF" | sed 's/Submitted batch job //')
 
 # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # # # # Pre-process bams to prepare for running seacr (optional)
-# # # # I.e. Sort bams by read name, fix mate pairs, and convert to fragment bedgraphs			
+# # # # I.e. Sort bams by read name, fix mate pairs, and convert to fragment bedgraphs		
 # # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # # PREPROCESS_CONTROL=`inDir=$projectDir/2_bams/control outDir=$projectDir/5_seacr_output/control \
@@ -245,7 +232,7 @@ BDG2BW_TF_ID=$(echo "$BDG2BW_TF" | sed 's/Submitted batch job //')
 # # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # # # # Call peaks with seacr (optional)
 # # # # Make sure to set igg as the control for both histone and tf files
-# # # # In each case, run seacr with both relaxed and stringent settings					
+# # # # In each case, run seacr with both relaxed and stringent settings			
 # # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # # # seacr relaxed
@@ -269,6 +256,19 @@ BDG2BW_TF_ID=$(echo "$BDG2BW_TF" | sed 's/Submitted batch job //')
 # #                     controlFile=$projectDir/5_seacr_output/control/*.bedgraph stringency=stringent \
 # #                     sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$PREPROCESS_CONTROL_ID:$PREPROCESS_TF_ID call_peaks_with_seacr.q`
 # # SEACR_STRINGENT_TF_ID=$(echo "$SEACR_STRINGENT_TF" | sed 's/Submitted batch job //') 
+
+
+# # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# # # Calculate FRIP score (requires bams and macs2 peaks)        
+# # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+FRIP_HISTONE=`bamDir=$projectDir/2_bams/histone peakDir=$projectDir/5_macs2_output_merged/histone \
+              outDir=$projectDir/reports/frip_scores sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$MERGE_PEAKS_HISTONE_ID:$ALIGN_HISTONE_ID calculate_frip_score.q`
+FRIP_HISTONE_ID=$(echo "$FRIP_HISTONE" | sed 's/Submitted batch job //')
+
+FRIP_TF=`bamDir=$projectDir/2_bams/tf peakDir=$projectDir/5_macs2_output_merged/tf \
+         outDir=$projectDir/reports/frip_scores sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$MERGE_PEAKS_TF_ID:$ALIGN_TF_ID calculate_frip_score.q`
+FRIP_TF_ID=$(echo "$FRIP_TF" | sed 's/Submitted batch job //')
 
 
 # # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -307,7 +307,9 @@ DEEPTOOLS_GENCODE_ID=$(echo "$DEEPTOOLS_GENCODE" | sed 's/Submitted batch job //
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Calculate repeat enrichment with giggle   
-# Compare against Cistrome (all three databases), and RepBase repeat database     
+# Compare against Cistrome (all three databases), and RepBase repeat database  
+# Schedule after frip score calculations
+# To avoid conflicts due to bgzipping the merged peak file   
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #histone files
@@ -315,28 +317,28 @@ GIGGLE_HISTONE_CISTROMEHF=`gigIdx=/Shares/CL_Shared/db/giggle/hg38/cistrome/Huma
                     inDir=$projectDir/5_macs2_output_merged/histone \
                     outDir=$projectDir/9_giggle_output \
                     db=cistrome_human_factor \
-                    sbatch --dependency=afterok:$MERGE_PEAKS_HISTONE_ID --array 0-$((($histoneNum/2)-1)) bgzip_and_giggle.q`
+                    sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$FRIP_HISTONE_ID bgzip_and_giggle.q`
 GIGGLE_HISTONE_CISTROMEHF_ID=$(echo "$GIGGLE_HISTONE_CISTROMEHF" | sed 's/Submitted batch job //') 
 
 GIGGLE_HISTONE_CISTROMEHH=`gigIdx=/Shares/CL_Shared/db/giggle/hg38/cistrome/Human_Histone/indexed \
                     inDir=$projectDir/5_macs2_output_merged/histone \
                     outDir=$projectDir/9_giggle_output \
                     db=cistrome_human_histone \
-                    sbatch --dependency=afterok:$GIGGLE_HISTONE_CISTROMEHF_ID --array 0-$((($histoneNum/2)-1)) bgzip_and_giggle.q`
+                    sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$GIGGLE_HISTONE_CISTROMEHF_ID bgzip_and_giggle.q`
 GIGGLE_HISTONE_CISTROMEHH_ID=$(echo "$GIGGLE_HISTONE_CISTROMEHH" | sed 's/Submitted batch job //') 
 
 GIGGLE_HISTONE_CISTROMECA=`gigIdx=/Shares/CL_Shared/db/giggle/hg38/cistrome/Human_Chromatin_Accessibility/indexed \
                     inDir=$projectDir/5_macs2_output_merged/histone \
                     outDir=$projectDir/9_giggle_output \
                     db=cistrome_human_chromatin_accessibility \
-                    sbatch --dependency=afterok:$GIGGLE_HISTONE_CISTROMEHH_ID --array 0-$((($histoneNum/2)-1)) bgzip_and_giggle.q`
+                    sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$GIGGLE_HISTONE_CISTROMEHH_ID bgzip_and_giggle.q`
 GIGGLE_HISTONE_CISTROMECA_ID=$(echo "$GIGGLE_HISTONE_CISTROMECA" | sed 's/Submitted batch job //')
 
 GIGGLE_HISTONE_REPEATS=`gigIdx=/Shares/CL_Shared/db/giggle/hg38/repeats/indexed \
                     inDir=$projectDir/5_macs2_output_merged/histone \
                     outDir=$projectDir/9_giggle_output \
                     db=repeats \
-                    sbatch --dependency=afterok:$GIGGLE_HISTONE_CISTROMECA_ID --array 0-$((($histoneNum/2)-1)) bgzip_and_giggle.q`
+                    sbatch --array 0-$((($histoneNum/2)-1)) --dependency=afterok:$GIGGLE_HISTONE_CISTROMECA_ID bgzip_and_giggle.q`
 GIGGLE_HISTONE_REPEATS_ID=$(echo "$GIGGLE_HISTONE_REPEATS" | sed 's/Submitted batch job //')
 
 # tf files
@@ -344,28 +346,28 @@ GIGGLE_TF_CISTROMEHF=`gigIdx=/Shares/CL_Shared/db/giggle/hg38/cistrome/Human_Fac
                     inDir=$projectDir/5_macs2_output_merged/tf \
                     outDir=$projectDir/9_giggle_output \
                     db=cistrome_human_factor \
-                    sbatch --dependency=afterok:$MERGE_PEAKS_TF_ID --array 0-$((($tfNum/2)*2-1)) bgzip_and_giggle.q`
+                    sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$FRIP_TF_ID bgzip_and_giggle.q`
 GIGGLE_TF_CISTROMEHF_ID=$(echo "$GIGGLE_TF_CISTROMEHF" | sed 's/Submitted batch job //') 
 
 GIGGLE_TF_CISTROMEHH=`gigIdx=/Shares/CL_Shared/db/giggle/hg38/cistrome/Human_Histone/indexed \
                     inDir=$projectDir/5_macs2_output_merged/tf \
                     outDir=$projectDir/9_giggle_output \
                     db=cistrome_human_histone \
-                    sbatch --dependency=afterok:$GIGGLE_TF_CISTROMEHF_ID --array 0-$((($tfNum/2)*2-1)) bgzip_and_giggle.q`
+                    sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$GIGGLE_TF_CISTROMEHF_ID bgzip_and_giggle.q`
 GIGGLE_TF_CISTROMEHH_ID=$(echo "$GIGGLE_TF_CISTROMEHH" | sed 's/Submitted batch job //') 
 
 GIGGLE_TF_CISTROMECA=`gigIdx=/Shares/CL_Shared/db/giggle/hg38/cistrome/Human_Chromatin_Accessibility/indexed \
                     inDir=$projectDir/5_macs2_output_merged/tf \
                     outDir=$projectDir/9_giggle_output \
                     db=cistrome_human_chromatin_accessibility \
-                    sbatch --dependency=afterok:$GIGGLE_TF_CISTROMEHH_ID --array 0-$((($tfNum/2)*2-1)) bgzip_and_giggle.q`
+                    sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$GIGGLE_TF_CISTROMEHH_ID bgzip_and_giggle.q`
 GIGGLE_TF_CISTROMECA_ID=$(echo "$GIGGLE_TF_CISTROMECA" | sed 's/Submitted batch job //')
 
 GIGGLE_TF_REPEATS=`gigIdx=/Shares/CL_Shared/db/giggle/hg38/repeats/indexed \
                     inDir=$projectDir/5_macs2_output_merged/tf \
                     outDir=$projectDir/9_giggle_output \
                     db=repeats \
-                    sbatch --dependency=afterok:$GIGGLE_TF_CISTROMECA_ID --array 0-$((($tfNum/2)*2-1)) bgzip_and_giggle.q`
+                    sbatch --array 0-$((($tfNum/2)*2-1)) --dependency=afterok:$GIGGLE_TF_CISTROMECA_ID bgzip_and_giggle.q`
 GIGGLE_TF_REPEATS_ID=$(echo "$GIGGLE_TF_REPEATS" | sed 's/Submitted batch job //')
 
 
@@ -413,8 +415,8 @@ echo "Calculate bam fragment size (igg, histone, tf): $FRAGSIZE_CONTROL_ID, $FRA
 echo "Call peaks using MACS2 PE mode (histone, tf): $MACS2_HISTONE_PE_ID, $MACS2_TF_PE_ID"
 echo "Call peaks using MACS2 SE mode (histone, tf): $MACS2_HISTONE_SE_ID, $MACS2_TF_SE_ID"
 echo "Merge peaks (histone, tf): $MERGE_PEAKS_HISTONE_ID, $MERGE_PEAKS_TF_ID"
-echo "Calculate frip score (histone, tf): $FRIP_HISTONE_ID, $FRIP_TF_ID"
 echo "Convert MACS2 bedgraphs to bigwigs (histone, tf): $BDG2BW_HISTONE_ID, $BDG2BW_TF_ID"
+echo "Calculate frip score (histone, tf): $FRIP_HISTONE_ID, $FRIP_TF_ID"
 #echo "Preprocess bams for seacr input (igg, histone, tf): $PREPROCESS_CONTROL_ID, $PREPROCESS_HISTONE_ID, $PREPROCESS_TF_ID"
 #echo "Call peaks using SEACR relaxed (histone, tf): $SEACR_RELAXED_HISTONE_ID, $SEACR_RELAXED_TF_ID"
 #echo "Call peaks using SEACR stringent (histone, tf): $SEACR_STRINGENT_HISTONE_ID, $SEACR_STRINGENT_TF_ID"
@@ -426,4 +428,5 @@ echo "Generate giggle comparisons against Repeats database (histone, tf): $GIGGL
 echo "Hubload all bigwigs: $HUBLOAD_BIGWIGS_ID"
 echo "Hubload bams (igg, histone, tf): $HUBLOAD_BAMS_CONTROL_ID, $HUBLOAD_BAMS_HISTONE_ID, $HUBLOAD_BAMS_TF_ID"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
 

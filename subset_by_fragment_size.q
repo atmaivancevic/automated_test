@@ -11,7 +11,7 @@
 #SBATCH -N 1
 #SBATCH -c 8
 #SBATCH --time=1:00:00
-#SBATCH --mem=32GB
+#SBATCH --mem=128GB
 
 # Job name and output
 #SBATCH -J subset_bam_by_size

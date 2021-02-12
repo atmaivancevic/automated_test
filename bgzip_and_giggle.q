@@ -15,7 +15,7 @@
 #SBATCH -N 1
 #SBATCH -c 1
 #SBATCH --time=1:00:00
-#SBATCH --mem=8GB
+#SBATCH --mem=32GB
 
 # Job name and output
 #SBATCH -J giggle

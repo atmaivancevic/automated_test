@@ -11,9 +11,9 @@
 # General settings
 #SBATCH -p short
 #SBATCH -N 1
-#SBATCH -c 16
+#SBATCH -c 8
 #SBATCH --time=1-00:00
-#SBATCH --mem=8GB
+#SBATCH --mem=64GB
 
 # Job name and output
 #SBATCH -J deeptools_gencode
@@ -40,7 +40,7 @@ echo $(date +"[%b %d %H:%M:%S] Compute matrix...")
 windowLeft=4000
 windowRight=4000
 binSize=10
-numCPU=16
+numCPU=8
 
 singularity exec --bind /scratch/Users $deeptools \
 computeMatrix reference-point \

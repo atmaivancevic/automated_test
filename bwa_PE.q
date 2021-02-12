@@ -9,9 +9,9 @@
 ## General settings
 #SBATCH -p short
 #SBATCH -N 1
-#SBATCH -n 4
+#SBATCH -c 4
 #SBATCH --time=8:00:00
-#SBATCH --mem=32GB
+#SBATCH --mem=64GB
 
 # Job name and output
 #SBATCH -J bwa_PE

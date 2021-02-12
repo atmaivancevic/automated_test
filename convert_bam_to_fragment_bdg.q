@@ -11,7 +11,7 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH --time=02:00:00
-#SBATCH --mem=16GB
+#SBATCH --mem=64GB
 
 # Job name and output
 #SBATCH -J bam_to_fragment_bdg
