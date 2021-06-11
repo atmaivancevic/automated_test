@@ -18,14 +18,14 @@
 #SBATCH -o /Users/%u/slurmOut/slurm-%A_%a.out
 #SBATCH -e /Users/%u/slurmErr/slurm-%A_%a.err
 
-# Set constant variables
-numThreads=4
-nonChrM=$(cat ${genomeChrFile} | awk '{print $1}' | grep -v chrM | tr '\n' ' ')
-
 # Define key variables
 bwaIndexDir=/Shares/CL_Shared/db/genomes/hg38/index/bwa
 bwaIndex=hg38.main.fa
 genomeChrFile=/Shares/CL_Shared/db/genomes/hg38/fa/hg38.main.chrom.sizes
+
+# Set constant variables
+numThreads=4
+nonChrM=$(cat ${genomeChrFile} | awk '{print $1}' | grep -v chrM | tr '\n' ' ')
 
 # Define query files
 queries=($(ls ${inDir}/*fastq.gz | xargs -n 1 basename | sed 's/_R1_trimmed.fastq.gz//g' | sed 's/_R2_trimmed.fastq.gz//g' | uniq))
